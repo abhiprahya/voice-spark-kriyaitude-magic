@@ -1,108 +1,107 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Mic, MicOff } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { Mic } from 'lucide-react';
 
 interface VoiceControlsProps {
   onVoiceInput: (text: string) => void;
   isProcessing: boolean;
 }
 
+// Type definition for the SpeechRecognition object
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onerror: (event: any) => void;
+  onresult: (event: any) => void;
+  onend: () => void;
+}
+
+// Type definition for the SpeechRecognition constructor
+interface SpeechRecognitionConstructor {
+  new(): SpeechRecognition;
+}
+
+// Get the appropriate SpeechRecognition API
+const SpeechRecognitionAPI = window.SpeechRecognition || 
+                            (window as any).webkitSpeechRecognition;
+
 const VoiceControls: React.FC<VoiceControlsProps> = ({ onVoiceInput, isProcessing }) => {
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const { toast } = useToast();
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const newRecognition = new SpeechRecognition();
-      newRecognition.continuous = false;
-      newRecognition.interimResults = false;
+    // Initialize speech recognition
+    if (SpeechRecognitionAPI) {
+      recognitionRef.current = new SpeechRecognitionAPI() as SpeechRecognition;
       
-      newRecognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.trim();
-        setIsListening(false);
-        onVoiceInput(transcript);
-      };
-      
-      newRecognition.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        setIsListening(false);
-        toast({
-          title: 'Voice recognition error',
-          description: 'Please try again or type your prompt.',
-          variant: 'destructive'
-        });
-      };
-      
-      newRecognition.onend = () => {
-        setIsListening(false);
-      };
-      
-      setRecognition(newRecognition);
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          onVoiceInput(transcript);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onerror = (event) => {
+          console.error('Speech recognition error', event);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
     }
-    
+
     return () => {
-      if (recognition) {
-        recognition.onresult = null;
-        recognition.onend = null;
-        recognition.onerror = null;
-        recognition.abort();
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
       }
     };
-  }, [onVoiceInput, toast]);
+  }, [onVoiceInput]);
 
-  const toggleListening = useCallback(() => {
-    if (isProcessing) return;
-    
-    if (isListening) {
-      recognition?.abort();
+  const toggleListening = () => {
+    if (!SpeechRecognitionAPI) {
+      console.error('Speech recognition not supported in this browser');
+      return;
+    }
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
       setIsListening(false);
-    } else {
-      if (!recognition) {
-        toast({
-          title: 'Voice recognition not supported',
-          description: 'Your browser does not support speech recognition.',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
+    } else if (!isListening && recognitionRef.current) {
       try {
-        recognition.start();
+        recognitionRef.current.start();
         setIsListening(true);
       } catch (error) {
-        console.error('Failed to start recognition', error);
-        toast({
-          title: 'Failed to start listening',
-          description: 'Please try again.',
-          variant: 'destructive'
-        });
+        console.error('Error starting speech recognition:', error);
       }
     }
-  }, [isListening, recognition, isProcessing, toast]);
+  };
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30">
-      <div className={`${isListening ? 'before:animate-pulse-ring before:absolute before:inset-0 before:rounded-full before:bg-primary-500/50 before:scale-150' : ''} relative`}>
-        <Button
-          onClick={toggleListening}
-          disabled={isProcessing}
-          className={`h-16 w-16 rounded-full shadow-lg ${
-            isListening 
-              ? 'bg-primary-600 hover:bg-primary-700 animate-bounce-subtle'
-              : 'bg-primary-500 hover:bg-primary-600'
-          } transition-all`}
-        >
-          {isListening ? (
-            <MicOff className="h-6 w-6 text-white" />
-          ) : (
-            <Mic className="h-6 w-6 text-white" />
-          )}
-        </Button>
-      </div>
+    <div className="fixed bottom-4 right-4 z-10">
+      <Button
+        onClick={toggleListening}
+        disabled={isProcessing}
+        className={`rounded-full h-14 w-14 shadow-lg ${
+          isListening 
+            ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+            : 'bg-primary-500 hover:bg-primary-600'
+        }`}
+        aria-label={isListening ? 'Stop listening' : 'Start voice input'}
+      >
+        <Mic className="h-6 w-6" />
+      </Button>
     </div>
   );
 };

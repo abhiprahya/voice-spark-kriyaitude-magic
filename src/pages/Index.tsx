@@ -6,6 +6,7 @@ import ContentCard from '@/components/ContentCard';
 import LanguageToggle from '@/components/LanguageToggle';
 import ContentTypeSelector from '@/components/ContentTypeSelector';
 import PromptInput from '@/components/PromptInput';
+import FeatureButtons from '@/components/FeatureButtons';
 import { useToast } from '@/hooks/use-toast';
 import { generateContent, textToSpeech, processVoiceCommand } from '@/services/ai';
 
@@ -13,6 +14,7 @@ const Index = () => {
   const { toast } = useToast();
   const [language, setLanguage] = useState<'english' | 'kannada'>('english');
   const [contentType, setContentType] = useState<'caption' | 'meme' | 'script'>('caption');
+  const [selectedFeature, setSelectedFeature] = useState<string>('text');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<{
@@ -21,6 +23,25 @@ const Index = () => {
     language: string;
     imageUrl?: string;
   } | null>(null);
+
+  // Handle feature selection
+  const handleFeatureSelect = useCallback((feature: string) => {
+    setSelectedFeature(feature);
+    
+    // Map features to content types where applicable
+    if (feature === 'text') {
+      setContentType('caption');
+    } else if (feature === 'image' || feature === 'gif') {
+      setContentType('meme');
+    } else if (feature === 'video' || feature === 'audio') {
+      setContentType('script');
+    }
+    
+    toast({
+      title: `${feature.charAt(0).toUpperCase() + feature.slice(1)} mode activated`,
+      description: "Now generating content for this format",
+    });
+  }, [toast]);
 
   // Handle voice input
   const handleVoiceInput = useCallback(async (text: string) => {
@@ -121,11 +142,18 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="pt-16 pb-24 px-4 max-w-md mx-auto">
+      <main className="pt-40 pb-24 px-4 max-w-md mx-auto">
         <div className="my-4 flex justify-center">
           <LanguageToggle 
             currentLanguage={language} 
             onLanguageChange={setLanguage} 
+          />
+        </div>
+        
+        <div className="my-4">
+          <FeatureButtons
+            selectedFeature={selectedFeature}
+            onFeatureSelect={handleFeatureSelect}
           />
         </div>
         

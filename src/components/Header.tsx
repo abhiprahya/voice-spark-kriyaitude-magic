@@ -16,6 +16,23 @@ const Header: React.FC = () => {
           Sign In
         </Button>
       </div>
+      <div className="w-full h-24 bg-gradient-to-r from-primary-100 via-primary-200 to-primary-100 flex items-center justify-center overflow-hidden">
+        <div className="relative w-full h-full">
+          <img 
+            src="/placeholder.svg" 
+            alt="Kriyaitude AI" 
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <h2 className="text-2xl font-bold text-primary-800 text-center">
+              Kriyaitude AI
+            </h2>
+            <p className="text-sm text-primary-700 mt-1">
+              Voice-powered content generation
+            </p>
+          </div>
+        </div>
+      </div>
     </header>
   );
 };
