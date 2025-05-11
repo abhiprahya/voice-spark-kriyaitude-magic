@@ -2,14 +2,21 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AudioLines } from 'lucide-react';
+import { Mic } from 'lucide-react';
 
 interface PromptInputProps {
   onSubmit: (text: string) => void;
   isProcessing: boolean;
+  onVoiceButtonClick: () => void;
+  isListening: boolean;
 }
 
-const PromptInput: React.FC<PromptInputProps> = ({ onSubmit, isProcessing }) => {
+const PromptInput: React.FC<PromptInputProps> = ({ 
+  onSubmit, 
+  isProcessing, 
+  onVoiceButtonClick,
+  isListening 
+}) => {
   const [inputText, setInputText] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,13 +39,14 @@ const PromptInput: React.FC<PromptInputProps> = ({ onSubmit, isProcessing }) => 
       <div className="absolute right-1 flex gap-1">
         <Button 
           type="button" 
-          variant="ghost" 
+          onClick={onVoiceButtonClick}
+          variant={isListening ? "destructive" : "ghost"}
           size="sm" 
-          className="h-8 w-8 p-0 rounded-full"
+          className={`h-8 w-8 p-0 rounded-full ${isListening ? 'animate-pulse' : ''}`}
           disabled={isProcessing}
+          aria-label={isListening ? 'Stop listening' : 'Voice input'}
         >
-          <AudioLines className="h-4 w-4" />
-          <span className="sr-only">Voice Input</span>
+          <Mic className="h-4 w-4" />
         </Button>
         <Button 
           type="submit" 

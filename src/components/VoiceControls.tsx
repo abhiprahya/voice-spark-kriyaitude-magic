@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
 import { Mic } from 'lucide-react';
 
 interface VoiceControlsProps {
   onVoiceInput: (text: string) => void;
   isProcessing: boolean;
+  isListening: boolean;
+  setIsListening: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // Type definition for the SpeechRecognition object
@@ -38,8 +40,12 @@ declare global {
 const SpeechRecognitionAPI = window.SpeechRecognition || 
                             window.webkitSpeechRecognition;
 
-const VoiceControls: React.FC<VoiceControlsProps> = ({ onVoiceInput, isProcessing }) => {
-  const [isListening, setIsListening] = useState(false);
+const VoiceControls: React.FC<VoiceControlsProps> = ({ 
+  onVoiceInput, 
+  isProcessing, 
+  isListening,
+  setIsListening
+}) => {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
@@ -74,7 +80,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({ onVoiceInput, isProcessin
         recognitionRef.current.abort();
       }
     };
-  }, [onVoiceInput]);
+  }, [onVoiceInput, setIsListening]);
 
   const toggleListening = () => {
     if (!SpeechRecognitionAPI) {
@@ -95,22 +101,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({ onVoiceInput, isProcessin
     }
   };
 
-  return (
-    <div className="fixed bottom-4 right-4 z-10">
-      <Button
-        onClick={toggleListening}
-        disabled={isProcessing}
-        className={`rounded-full h-14 w-14 shadow-lg ${
-          isListening 
-            ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
-            : 'bg-primary-500 hover:bg-primary-600'
-        }`}
-        aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-      >
-        <Mic className="h-6 w-6" />
-      </Button>
-    </div>
-  );
+  return { toggleListening };
 };
 
 export default VoiceControls;
