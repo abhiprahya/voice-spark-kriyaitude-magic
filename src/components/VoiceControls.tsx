@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic } from 'lucide-react';
@@ -27,9 +26,17 @@ interface SpeechRecognitionConstructor {
   new(): SpeechRecognition;
 }
 
+// Extend the Window interface to include SpeechRecognition
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
 // Get the appropriate SpeechRecognition API
 const SpeechRecognitionAPI = window.SpeechRecognition || 
-                            (window as any).webkitSpeechRecognition;
+                            window.webkitSpeechRecognition;
 
 const VoiceControls: React.FC<VoiceControlsProps> = ({ onVoiceInput, isProcessing }) => {
   const [isListening, setIsListening] = useState(false);

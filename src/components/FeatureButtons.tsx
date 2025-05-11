@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Image, Video, GIF, Text, Languages, AudioLines } from 'lucide-react';
+import { Image, Video, Gift, Text, Languages, AudioLines } from 'lucide-react';
 
 interface FeatureButtonsProps {
   onFeatureSelect: (feature: string) => void;
@@ -15,7 +15,7 @@ const FeatureButtons: React.FC<FeatureButtonsProps> = ({
   const features = [
     { id: 'image', icon: Image, label: 'Image' },
     { id: 'video', icon: Video, label: 'Video' },
-    { id: 'gif', icon: GIF, label: 'GIF' },
+    { id: 'gif', icon: Gift, label: 'GIF' },
     { id: 'text', icon: Text, label: 'Text' },
     { id: 'translate', icon: Languages, label: 'Translate' },
     { id: 'audio', icon: AudioLines, label: 'Audio' }
